@@ -5,8 +5,11 @@ const app = express();
 const port = 3000;
 
 app.use(morgan('combined'));
-
 app.use(express.static('public'));
+
+app.get('/style.css', (req, res) => {
+    res.sendFile(__dirname + '/style.css');
+});
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
