@@ -8,19 +8,42 @@
       MTGIFY_CONFIG = {
         linkSource: "scryfall",
         imgSource: "scryfall",
+        enableAutoTag: true,
       }
     </script>
     <script src="https://mtgify.org/dist/autocard.js"></script>
 
+
     <title>My Web Page</title>
 </head>
 <body>
-    <h1 ><div> <auto-card-image>Black Lotus</auto-card-image> </div></h1>
-    <h2><auto-card-list preview name="Marco's Pineer UW Control" src="pioneer_uw.txt"></auto-card-list></h2>
+    <h1 ><div> <auto-card>Black Lotus</auto-card-image> </div></h1>
+      <div>
+        <input id="search-input" type="text" placeholder="Search...">
+        <button id = "search-button" type = "submit">Search</button>
+      </div>
+      <ul id="card-list"></ul>
+    
     
     <!-- Your content goes here -->
   
-  
+  <script>
+  document.getElementById('search-button').addEventListener('click', function() {
+  var searchQuery = document.getElementById('search-input').value;
 
+  fetch('https://api.scryfall.com/cards/named?fuzzy=' + searchQuery.split(' ').join('+'))
+    .then(response => response.json())
+    .then(data => {
+      console.log('API response:', data);
+      var cardElement = document.createElement('div');
+      cardElement.textContent = data.name;
+      console.log('Creating card element:', cardElement);
+      document.getElementById("card-list").appendChild(cardElement);
+
+      MTGIFY.tagBody();
+    })
+    .catch(error => console.error('Error:', error));
+  });
+  </script>
 </body>
 </html>
