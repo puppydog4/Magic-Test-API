@@ -24,16 +24,34 @@ document
   
         console.log('API response:', data);
         var cardName = data.name;
-  
-        // Update cardCounts
-        if (cardName in cardCounts) {
-          cardCounts[cardName]++;
-        } else {
-          cardCounts[cardName] = 1;
+        var cardType = data.type_line.split(' ')[0];
+
+        // Increase cardType coun
+        if (!(cardType in cardCounts)){
+          cardCounts[cardType] = {typeCount: 0, cards:{} }; ;
+        } 
+        cardCounts[cardType].typeCount++;
+
+        if (!(cardName in cardCounts[cardType].cards)){
+          cardCounts[cardType].cards[cardName] = 0;
         }
+        cardCounts[cardType].cards[cardName]++;
+
+        console.log('Card counts:', cardCounts);
   
         // Update display
         var cardList = document.getElementById('card-list');
+        var existingTypeElement = document.getElementById('type-' + cardType);
+        if(!existingTypeElement){
+
+          existingTypeElement = document.createElement('div');
+          existingTypeElement.id = 'type-' + cardType;
+          existingTypeElement.className = 'card-type';
+          existingTypeElement.setAttribute("auto-card-off", "");
+          cardList.appendChild(existingTypeElement);
+        }
+        existingTypeElement.textContent = cardType + ' (' + cardCounts[cardType] + ')';
+
         var existingCardElement = document.getElementById('card-' + cardName);
         if (existingCardElement) {
           // Update count for existing card
@@ -48,17 +66,19 @@ document
           cardText.textContent = cardCounts[cardName] + ' ' + cardName;
           cardElement.appendChild(cardText);
 
+          // Increase Button
           var increaseButton = document.createElement("button");
           increaseButton.textContent = "+";
           increaseButton.setAttribute("auto-card-off", "");
           increaseButton.classList.add("remove-button");
           increaseButton.addEventListener('click', function() {
             cardCounts[cardName]++;
-            cardText.textContent = cardCounts[cardName] + ' ' + cardName;
+            cardText.textContent = cardCounts[cardType][cardName] + ' ' + cardName;
             MTGIFY.tagBody();
           });
           cardElement.appendChild(increaseButton);
 
+          //Decrease Button
           var decreaseButton = document.createElement("button");
           decreaseButton.textContent = "-";
           decreaseButton.setAttribute("auto-card-off", "");
@@ -66,7 +86,7 @@ document
           decreaseButton.addEventListener('click', function() {
             if (cardCounts[cardName] > 1) {
               cardCounts[cardName]--;
-              cardText.textContent = cardCounts[cardName] + ' ' + cardName;
+              cardText.textContent = cardCounts[cardType][cardName] + ' ' + cardName;
             }else{
               cardElement.remove();
               delete cardCounts[cardName];
@@ -82,7 +102,12 @@ document
           removeButton.classList.add("remove-button");
           removeButton.addEventListener('click', function() {
             cardElement.remove();
-            delete cardCounts[cardName];
+            cardCounts[cardType].typeCount-= cardCounts[cardType].cards[cardName];
+            if (cardCounts[cardType].typeCount == 0){
+              delete cardCounts[cardType];
+            }else {
+              delete cardCounts[cardType].cards[cardName];
+            }
           });
   
           cardElement.appendChild(removeButton);
