@@ -1,3 +1,4 @@
+
 document
   .getElementById("search-button")
   .addEventListener("click", searchFunction);
@@ -13,8 +14,8 @@ document
 
   function searchFunction() {
     var searchQuery = document.getElementById('search-input').value;
-  
-    fetch('https://api.scryfall.com/cards/named?fuzzy=' + searchQuery.split(' ').join('+'))
+
+    fetch('https://api.scryfall.com/cards/named?fuzzy=' + searchQuery)
       .then(response => response.json())
       .then(data => {
         if (data.object === 'error') {
@@ -25,6 +26,9 @@ document
         console.log('API response:', data);
         var cardName = data.name;
         var cardType = data.type_line.split(' ')[0];
+        if (cardType === 'Legendary' || cardType === 'Basic') {
+          cardType = data.type_line.split(' ')[1];
+        }
 
         // Increase cardType coun
         if (!(cardType in cardCounts)){
@@ -37,25 +41,26 @@ document
         }
         cardCounts[cardType].cards[cardName]++;
 
-        console.log('Card counts:', cardCounts);
+        console.log('Card counts:', cardCounts[cardType].cards[cardName]);
+        console.log('Card type counts:', cardCounts[cardType].typeCount);
+        
   
         // Update display
         var cardList = document.getElementById('card-list');
         var existingTypeElement = document.getElementById('type-' + cardType);
-        if(!existingTypeElement){
-
+        if (!existingTypeElement) {
           existingTypeElement = document.createElement('div');
           existingTypeElement.id = 'type-' + cardType;
           existingTypeElement.className = 'card-type';
           existingTypeElement.setAttribute("auto-card-off", "");
           cardList.appendChild(existingTypeElement);
         }
-        existingTypeElement.textContent = cardType + ' (' + cardCounts[cardType] + ')';
+        existingTypeElement.textContent = cardType + ' (' + cardCounts[cardType].typeCount + ')';
 
         var existingCardElement = document.getElementById('card-' + cardName);
         if (existingCardElement) {
           // Update count for existing card
-          existingCardElement.querySelector('.card-text').textContent = cardCounts[cardName] + ' ' + cardName;
+          existingCardElement.querySelector('.card-text').textContent = cardCounts[cardType].cards[cardName] + ' ' + cardName;
         } else {
           // Add new card
           var cardElement = document.createElement('div');
@@ -63,7 +68,7 @@ document
   
           var cardText = document.createElement('span');
           cardText.className = 'card-text';
-          cardText.textContent = cardCounts[cardName] + ' ' + cardName;
+          cardText.textContent = cardCounts[cardType].cards[cardName] + ' ' + cardName;
           cardElement.appendChild(cardText);
 
           // Increase Button
@@ -72,8 +77,10 @@ document
           increaseButton.setAttribute("auto-card-off", "");
           increaseButton.classList.add("remove-button");
           increaseButton.addEventListener('click', function() {
-            cardCounts[cardName]++;
-            cardText.textContent = cardCounts[cardType][cardName] + ' ' + cardName;
+            cardCounts[cardType].cards[cardName]++;
+            cardText.textContent = cardCounts[cardType].cards[cardName] + ' ' + cardName;
+            cardCounts[cardType].typeCount++;
+            existingTypeElement.textContent = cardType + ' (' + cardCounts[cardType].typeCount + ')';
             MTGIFY.tagBody();
           });
           cardElement.appendChild(increaseButton);
@@ -84,12 +91,19 @@ document
           decreaseButton.setAttribute("auto-card-off", "");
           decreaseButton.classList.add("remove-button");
           decreaseButton.addEventListener('click', function() {
-            if (cardCounts[cardName] > 1) {
-              cardCounts[cardName]--;
-              cardText.textContent = cardCounts[cardType][cardName] + ' ' + cardName;
-            }else{
+            if (cardCounts[cardType].cards[cardName] > 1) {
+              cardCounts[cardType].cards[cardName]--;
+              cardText.textContent = cardCounts[cardType].cards[cardName] + ' ' + cardName;
+            } else {
               cardElement.remove();
-              delete cardCounts[cardName];
+              delete cardCounts[cardType].cards[cardName];
+            }
+            if (cardCounts[cardType].typeCount > 1) {
+              cardCounts[cardType].typeCount--;
+              existingTypeElement.textContent = cardType + ' (' + cardCounts[cardType].typeCount + ')';
+            } else {
+              existingTypeElement.remove();
+              delete cardCounts[cardType];
             }
             MTGIFY.tagBody();
           });
@@ -102,8 +116,8 @@ document
           removeButton.classList.add("remove-button");
           removeButton.addEventListener('click', function() {
             cardElement.remove();
-            cardCounts[cardType].typeCount-= cardCounts[cardType].cards[cardName];
-            if (cardCounts[cardType].typeCount == 0){
+            cardCounts[cardType].typeCount -= cardCounts[cardType].cards[cardName];
+            if (cardCounts[cardType].cards[cardName] == 0){
               delete cardCounts[cardType];
             }else {
               delete cardCounts[cardType].cards[cardName];
