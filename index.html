@@ -28,39 +28,8 @@
     
     <!-- Your content goes here -->
   
-  <script>
-  document.getElementById('search-button').addEventListener('click', function() {
-  var searchQuery = document.getElementById('search-input').value;
-
-  fetch('https://api.scryfall.com/cards/named?fuzzy=' + searchQuery.split(' ').join('+'))
-    .then(response => response.json())
-    .then(data => {
-      if (data.object === 'error') {
-        console.error('API error:', data);
-        return;
-      }
-      
-      console.log('API response:', data);
-      var cardElement = document.createElement('div');
-      cardElement.textContent = data.name;
-
-      var removeButton = document.createElement("button");
-      removeButton.textContent = "Remove";
-      removeButton.setAttribute("auto-card-off", "");
-      removeButton.classList.add("remove-button");
-      removeButton.addEventListener('click', function() {
-        cardElement.remove();
-      });
-
-      cardElement.appendChild(removeButton);
-
-      console.log('Creating card element:', cardElement);
-      document.getElementById("card-list").appendChild(cardElement);
-
-      MTGIFY.tagBody();
-    })
-    .catch(error => console.error('Error:', error));
-  });
-  </script>
+ 
+  <script src="scripts/fetch-api.js"></script>
+  ,<script>MTGIFY.tagBody()</script>
 </body>
 </html>
